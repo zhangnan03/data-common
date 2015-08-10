@@ -7,6 +7,6 @@
 <title>Insert title here</title>
 </head>
 <body>
-	welcome to common index
+	没有操作的权限
 </body>
 </html>

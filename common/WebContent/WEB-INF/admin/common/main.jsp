@@ -7,6 +7,6 @@
 <title>Insert title here</title>
 </head>
 <body>
-	welcome to common index
+	欢迎您
 </body>
 </html>
