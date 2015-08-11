@@ -17,7 +17,7 @@
 	default-lazy-init="true"> 
 	
 	<context:property-placeholder location="classpath*:/jdbc.properties" ignore-resource-not-found="true" ignore-unresolvable="true" />
-	<context:component-scan base-package="com">
+	<context:component-scan base-package="com.sun">
 		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
 	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
@@ -50,14 +50,19 @@
 		<property name="dataSource" ref="dataSource"/> 
 		<property name="persistenceXmlLocation" value="classpath*:/persistence.xml" />
 		<property name="persistenceUnitName" value="persistenceUnit"/>
+		<!-- 用于设置JPA实现厂商的特定属性 -->  
 		<property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/> 
 		<property name="jpaProperties">
 			<props>
-				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
-				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</prop>
-				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
-				<prop key="net.sf.ehcache.configurationResourceName">ehcache/ehcache-hibernate-local.xml</prop>
-				<prop key="hibernate.ejb.naming_strategy">org.hibernate.cfg.ImprovedNamingStrategy</prop>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop> 
+				<prop key="hibernate.cache.use_query_cache">${hibernate.cache.use_query_cache}</prop> 
+                <prop key="hibernate.jdbc.fetch_size">${hibernate.jdbc.fetch_size}</prop>  
+                <prop key="hibernate.jdbc.batch_size">${hibernate.jdbc.batch_size}</prop>  
+                <prop key="hibernate.show_sql">${hibernate.show_sql}</prop>  
+                <prop key="hibernate.format_sql">true</prop>  
+                <prop key="javax.persistence.validation.mode">none</prop>
+				<prop key="hibernate.cache.region.factory_class">${hibernate.cache.region.factory_class}</prop>
+				<prop key="hibernate.cache.use_second_level_cache">${hibernate.cache.use_second_level_cache}</prop>
 			</props>
 		</property>
 	</bean>
@@ -80,11 +85,16 @@
 		这个策略结合了以上两个策略。他会优先查询是否有定义好的查询语句，如果没有，就根据方法的名字去构建查询。这是一个默认策略，如果不特别指定其他策略，那么这个策略会在项目
 		中沿用。
 	-->
-	<jpa:repositories base-package="com.dao"  transaction-manager-ref="transactionManager" entity-manager-factory-ref="entityManagerFactory"/>
+	<jpa:repositories base-package="com.sun"  transaction-manager-ref="transactionManager" entity-manager-factory-ref="entityManagerFactory"/>
 	<bean id="imageCaptchaService" class="com.octo.captcha.service.image.DefaultManageableImageCaptchaService">
 		<property name="captchaEngine">
-			<bean class="com.captcha.CaptchaEngine" />
+			<bean class="com.sun.captcha.CaptchaEngine" />
 		</property>
 		<property name="minGuarantedStorageDelayInSeconds" value="3600" />
+	</bean>
+	
+	<bean id="ehCacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+		<property name="configLocation" value="classpath:ehcache/ehcache-hibernate-local.xml" />
+		<property name="shared" value="true" />
 	</bean>
 </beans>  
