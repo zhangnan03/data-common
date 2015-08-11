@@ -1,10 +1,9 @@
 package com.sun.dao;
 
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.CrudRepository;
 
 import com.sun.entity.Admin;
-
-public interface AdminDao extends PagingAndSortingRepository<Admin, Long>{
+public interface AdminDao extends CrudRepository<Admin, Long>{
 	/**
 	 * 根据用户名查找管理员
 	 * 

@@ -16,8 +16,7 @@
 	http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.2.xsd
 	http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd
 	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
-	http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd"
-	default-lazy-init="true"> 
+	http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd"> 
 	
 	<context:property-placeholder location="classpath*:/jdbc.properties" ignore-resource-not-found="true" ignore-unresolvable="true" />
 	<!-- 定时任务注解驱动 -->
@@ -27,6 +26,18 @@
 		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
 		<context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
 	</context:component-scan>
+	<!-- 命名空间使用了JPA的命名空间 :
+		查询策略：通过配置<repository>的query-lookup-strategy属性来决定。
+		CREATE
+		通过解析方法名字来创建查询。这个策略是删除方法中固定的前缀，然后再来解析其余的部分。
+		USE_DECLARED_QUERY
+		它会根据已经定义好的语句去查询，如果找不到，则会抛出异常信息。这个语句可以在某个注解或者方法上定义。根据给定的规范来查找可用选项，如果在方法被调用时没有找到定义的查
+		询，那么会抛出异常。
+		CREATE_IF_NOT_FOUND(默认)
+		这个策略结合了以上两个策略。他会优先查询是否有定义好的查询语句，如果没有，就根据方法的名字去构建查询。这是一个默认策略，如果不特别指定其他策略，那么这个策略会在项目
+		中沿用。
+	-->
+	<jpa:repositories base-package="com.sun" />
 	<aop:aspectj-autoproxy proxy-target-class="true" />
 	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
         <!-- 基本属性 url、user、password -->
@@ -56,10 +67,12 @@
 
 	<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"> 
 		<property name="dataSource" ref="dataSource"/> 
-		<property name="persistenceXmlLocation" value="classpath*:/persistence.xml" />
-		<property name="persistenceUnitName" value="persistenceUnit"/>
+		<property name="persistenceProvider" ref="persistenceProvider" />  
 		<!-- 用于设置JPA实现厂商的特定属性 -->  
-		<property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/> 
+		<property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/>
+		<property name="jpaDialect" ref="jpaDialect" />  
+		<!-- 此种配种不需要配置文件-->  
+		<property name="packagesToScan" value="com.sun.entity" /> 
 		<property name="jpaProperties">
 			<props>
 				<prop key="hibernate.dialect">${hibernate.dialect}</prop> 
@@ -74,31 +87,20 @@
 			</props>
 		</property>
 	</bean>
-	
-	
+	<!-- 用于指定持久化实现厂商类 -->  
+    <bean id="persistenceProvider" class="org.hibernate.ejb.HibernatePersistence" />  
+    <!-- 用于设置JPA实现厂商的特定属性 -->  
 	<bean id="hibernateJpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
-	
-	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+	<!-- 用于指定一些高级特性 -->  
+    <bean id="jpaDialect" class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
+    <!-- 事务管理器 -->  
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory" />
 	</bean>
-	
-	
 	
 	<!-- 使用annotation定义事务 -->
 	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
 	
-	<!-- 命名空间使用了JPA的命名空间 :
-		查询策略：通过配置<repository>的query-lookup-strategy属性来决定。
-		CREATE
-		通过解析方法名字来创建查询。这个策略是删除方法中固定的前缀，然后再来解析其余的部分。
-		USE_DECLARED_QUERY
-		它会根据已经定义好的语句去查询，如果找不到，则会抛出异常信息。这个语句可以在某个注解或者方法上定义。根据给定的规范来查找可用选项，如果在方法被调用时没有找到定义的查
-		询，那么会抛出异常。
-		CREATE_IF_NOT_FOUND(默认)
-		这个策略结合了以上两个策略。他会优先查询是否有定义好的查询语句，如果没有，就根据方法的名字去构建查询。这是一个默认策略，如果不特别指定其他策略，那么这个策略会在项目
-		中沿用。
-	-->
-	<jpa:repositories base-package="com.sun" />
 	<bean id="imageCaptchaService" class="com.octo.captcha.service.image.DefaultManageableImageCaptchaService">
 		<property name="captchaEngine">
 			<bean class="com.sun.captcha.CaptchaEngine" />
