@@ -27,7 +27,7 @@
 		</property>
 	</bean>
 
-	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager" depends-on="userDao">
 		<property name="realm" ref="authenticationRealm" />
 		<property name="cacheManager" ref="shiroCacheManager" />
 	</bean>
